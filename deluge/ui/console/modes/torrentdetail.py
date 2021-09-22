@@ -220,7 +220,7 @@ class TorrentDetail(BaseMode, PopupsHandler):
         self.refresh()
 
     def build_file_list(self, torrent_files, progress, priority):
-        """ Split file list from torrent state into a directory tree.
+        """Split file list from torrent state into a directory tree.
 
         Returns:
 
@@ -710,7 +710,7 @@ class TorrentDetail(BaseMode, PopupsHandler):
                 'skip_priority',
                 '_Skip',
                 foreground='red',
-                cb_arg=FILE_PRIORITY['Low'],
+                cb_arg=FILE_PRIORITY['Skip'],
                 was_empty=was_empty,
             )
             popup.add_line(

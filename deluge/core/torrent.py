@@ -266,6 +266,9 @@ class Torrent(object):
             self.is_finished = False
             self.filename = filename
 
+        if not self.filename:
+            self.filename = ''
+
         self.forced_error = None
         self.statusmsg = None
         self.state = None
@@ -428,14 +431,14 @@ class Torrent(object):
         # Setting the priorites for all the pieces of this torrent
         self.handle.prioritize_pieces(priorities)
 
-    def set_sequential_download(self, set_sequencial):
+    def set_sequential_download(self, sequential):
         """Sets whether to download the pieces of the torrent in order.
 
         Args:
-            set_sequencial (bool): Enable sequencial downloading.
+            sequential (bool): Enable sequential downloading.
         """
-        self.options['sequential_download'] = set_sequencial
-        self.handle.set_sequential_download(set_sequencial)
+        self.options['sequential_download'] = sequential
+        self.handle.set_sequential_download(sequential)
 
     def set_auto_managed(self, auto_managed):
         """Set auto managed mode, i.e. will be started or queued automatically.
@@ -991,6 +994,8 @@ class Torrent(object):
                 call to get_status based on the session_id
             update (bool): If True the status will be updated from libtorrent
                 if False, the cached values will be returned
+            all_keys (bool): If True return all keys while ignoring the keys param
+                if False, return only the requested keys
 
         Returns:
             dict: a dictionary of the status keys and their values
@@ -1316,7 +1321,7 @@ class Torrent(object):
         torrent_files = [
             os.path.join(get_config_dir(), 'state', self.torrent_id + '.torrent')
         ]
-        if delete_copies:
+        if delete_copies and self.filename:
             torrent_files.append(
                 os.path.join(self.config['torrentfiles_location'], self.filename)
             )
@@ -1340,8 +1345,8 @@ class Torrent(object):
     def scrape_tracker(self):
         """Scrape the tracker
 
-         A scrape request queries the tracker for statistics such as total
-         number of incomplete peers, complete peers, number of downloads etc.
+        A scrape request queries the tracker for statistics such as total
+        number of incomplete peers, complete peers, number of downloads etc.
         """
         try:
             self.handle.scrape_tracker()
@@ -1388,7 +1393,7 @@ class Torrent(object):
         This basically does a file rename on all of the folders children.
 
         Args:
-            folder (str): The orignal folder name
+            folder (str): The original folder name
             new_folder (str): The new folder name
 
         Returns:

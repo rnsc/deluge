@@ -246,7 +246,7 @@ class BuildTranslations(cmd.Command):
                             upto_date = True
 
         if upto_date:
-            sys.stdout.write(' po files already upto date.  ')
+            sys.stdout.write(' po files already up to date.  ')
         sys.stdout.write('\b\b \nFinished compiling translation files. \n')
 
 
@@ -544,17 +544,20 @@ install_requires = [
     'pyopenssl',
     'pygobject',
     'pyxdg',
-    'pillow',
     'mako',
-    'chardet',
     'six',
-    'setproctitle',
+    'setuptools',
     "pywin32; sys_platform == 'win32'",
-    "py2-ipaddress; sys_platform == 'win32' and python_version == '2'",
     "certifi; sys_platform == 'win32'",
     'zope.interface',
 ]
-tests_require = ['pytest', 'pytest-twisted']
+extras_require = {
+    'all': [
+        'setproctitle',
+        'pillow',
+        'chardet',
+    ]
+}
 
 # Main setup
 setup(
@@ -598,7 +601,7 @@ setup(
     cmdclass=cmdclass,
     setup_requires=setup_requires,
     install_requires=install_requires,
-    tests_require=tests_require,
+    extras_require=extras_require,
     data_files=_data_files,
     package_data=_package_data,
     exclude_package_data=_exclude_package_data,

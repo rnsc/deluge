@@ -108,7 +108,6 @@ def setup_translation():
             locale.textdomain(I18N_DOMAIN)
 
         gettext.bindtextdomain(I18N_DOMAIN, translations_path)
-        gettext.bind_textdomain_codeset(I18N_DOMAIN, 'UTF-8')
         gettext.textdomain(I18N_DOMAIN)
 
         # Workaround for Python 2 unicode gettext (keyword removed in Py3).
@@ -117,20 +116,28 @@ def setup_translation():
         gettext.install(I18N_DOMAIN, translations_path, names=['ngettext'], **kwargs)
         builtins.__dict__['_n'] = builtins.__dict__['ngettext']
 
-        libintl = None
-        if deluge.common.windows_check():
-            for intl in ('libintl-8.dll', 'intl.dll'):
+        def load_libintl(libintls):
+            errors = []
+            for library in libintls:
                 try:
-                    libintl = ctypes.cdll.LoadLibrary(intl)
+                    libintl = ctypes.cdll.LoadLibrary(library)
                 except OSError as ex:
-                    exception = ex
+                    errors.append(ex)
                 else:
                     break
-                finally:
-                    if not libintl:
-                        log.error('Unable to initialize gettext/locale!')
-                        log.error(exception)
-                        setup_mock_translation()
+
+            if not libintl:
+                log.debug(
+                    'Unable to initialize gettext/locale:\n  %s', '\n  '.join(errors)
+                )
+                setup_mock_translation()
+                return
+
+            return libintl
+
+        libintl = None
+        if deluge.common.windows_check():
+            libintl = load_libintl(['libintl-8.dll', 'intl.dll'])
         elif deluge.common.osx_check():
             libintl = ctypes.cdll.LoadLibrary('libintl.8.dylib')
 
@@ -139,7 +146,6 @@ def setup_translation():
                 I18N_DOMAIN, translations_path.encode(sys.getfilesystemencoding())
             )
             libintl.textdomain(I18N_DOMAIN)
-            libintl.bind_textdomain_codeset(I18N_DOMAIN, 'UTF-8')
             libintl.gettext.restype = ctypes.c_char_p
 
     except Exception as ex:

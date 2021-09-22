@@ -191,7 +191,7 @@ class Tracker(resource.Resource):
             request.finish()
 
     def render(self, request):
-        d = self.tracker_icons.fetch(request.tracker_name)
+        d = self.tracker_icons.fetch(request.tracker_name.decode())
         d.addCallback(self.on_got_icon, request)
         return server.NOT_DONE_YET
 
@@ -653,7 +653,7 @@ class DelugeWeb(component.Component):
 
         Args:
             options (argparse.Namespace): The web server options.
-            daemon (bool): If True run web server as a seperate daemon process (starts a twisted
+            daemon (bool): If True run web server as a separate daemon process (starts a twisted
                 reactor). If False shares the process and twisted reactor from WebUI plugin or tests.
 
         """
@@ -698,7 +698,7 @@ class DelugeWeb(component.Component):
 
         self.auth = Auth(self.config)
         self.daemon = daemon
-        # Initalize the plugins
+        # Initialize the plugins
         self.plugins = PluginManager()
 
     def _on_language_changed(self, key, value):

@@ -75,7 +75,7 @@ set_prgname('deluge')
 log = logging.getLogger(__name__)
 
 try:
-    from setproctitle import setproctitle, getproctitle
+    from setproctitle import getproctitle, setproctitle
 except ImportError:
 
     def setproctitle(title):
@@ -121,6 +121,7 @@ DEFAULT_PREFS = {
     'show_toolbar': True,
     'show_statusbar': True,
     'show_tabsbar': True,
+    'tabsbar_tab_pos': 'top',
     'tabsbar_position': 235,
     'sidebar_show_zero': False,
     'sidebar_show_trackers': True,
@@ -227,7 +228,7 @@ class GtkUI(object):
             menubar_osx(self, self.osxapp)
             self.osxapp.ready()
 
-        # Initalize the plugins
+        # Initialize the plugins
         self.plugins = PluginManager()
 
         # Show the connection manager

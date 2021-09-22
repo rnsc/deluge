@@ -77,7 +77,7 @@ class Preferences(component.Component):
         self.load_pref_dialog_state()
 
         self.builder.get_object('image_magnet').set_from_file(
-            deluge.common.get_pixmap('magnet.png')
+            deluge.common.get_pixmap('magnet16.png')
         )
 
         # Hide the unused associate magnet button on OSX see: #2420
@@ -255,11 +255,10 @@ class Preferences(component.Component):
         vbox.pack_start(label, False, True, 0)
         sep = Gtk.HSeparator()
         vbox.pack_start(sep, False, True, 0)
-        align = Gtk.Alignment()
-        align.set_padding(5, 0, 0, 0)
-        align.set(0, 0, 1, 1)
-        align.add(widget)
-        vbox.pack_start(align, True, True, 0)
+        widget.set_margin_top(7)
+        widget.set_vexpand(True)
+        widget.set_hexpand(True)
+        vbox.pack_start(widget, True, True, 0)
         scrolled = Gtk.ScrolledWindow()
         viewport = Gtk.Viewport()
         viewport.set_shadow_type(Gtk.ShadowType.NONE)
@@ -1180,8 +1179,8 @@ class Preferences(component.Component):
             chooser.destroy()
             return
 
-        from base64 import b64encode
         import shutil
+        from base64 import b64encode
 
         filename = os.path.split(filepath)[1]
         shutil.copyfile(filepath, os.path.join(get_config_dir(), 'plugins', filename))

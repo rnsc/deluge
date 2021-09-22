@@ -15,8 +15,10 @@ from base64 import b64encode
 import mock
 import pytest
 from twisted.internet import defer, task
+from twisted.trial import unittest
 
 from deluge import component
+from deluge.common import windows_check
 from deluge.core.core import Core
 from deluge.core.rpcserver import RPCServer
 from deluge.error import InvalidTorrentError
@@ -54,6 +56,16 @@ class TorrentmanagerTestCase(BaseTestCase):
         torrent_id = yield self.core.add_torrent_file_async(
             filename, b64encode(filedump), {}
         )
+        self.assertTrue(self.tm.remove(torrent_id, False))
+
+    @defer.inlineCallbacks
+    def test_remove_magnet(self):
+        """Test remove magnet before received metadata and delete_copies is True"""
+        magnet = 'magnet:?xt=urn:btih:ab570cdd5a17ea1b61e970bb72047de141bce173'
+        options = {}
+        self.core.config.config['copy_torrent_file'] = True
+        self.core.config.config['del_copy_torrent_file'] = True
+        torrent_id = yield self.core.add_torrent_magnet(magnet, options)
         self.assertTrue(self.tm.remove(torrent_id, False))
 
     def test_prefetch_metadata(self):
@@ -127,5 +139,10 @@ class TorrentmanagerTestCase(BaseTestCase):
             common.get_test_data_file('utf8_filename_torrents.state'),
             os.path.join(self.config_dir, 'state', 'torrents.state'),
         )
+        if windows_check():
+            raise unittest.SkipTest(
+                'Windows ModuleNotFoundError due to Linux line ending'
+            )
+
         state = self.tm.open_state()
         self.assertEqual(len(state.torrents), 1)

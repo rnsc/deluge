@@ -57,10 +57,10 @@ from deluge.event import (
 from deluge.httpdownloader import download_file
 
 try:
-    from urllib.request import urlopen, URLError
+    from urllib.request import URLError, urlopen
 except ImportError:
     # PY2 fallback
-    from urllib2 import urlopen, URLError
+    from urllib2 import URLError, urlopen
 
 log = logging.getLogger(__name__)
 
@@ -267,7 +267,7 @@ class Core(component.Component):
             version (str): The version string in PEP440 dotted notation.
 
         Returns:
-            str: The formattted peer_id with Deluge prefix e.g. '--DE200s--'
+            str: The formatted peer_id with Deluge prefix e.g. '--DE200s--'
 
         """
         split = deluge.common.VersionSplit(version)
@@ -456,7 +456,7 @@ class Core(component.Component):
             return result
 
         d = self.torrentmanager.prefetch_metadata(magnet, timeout)
-        # Use a seperate callback chain to handle existing prefetching magnet.
+        # Use a separate callback chain to handle existing prefetching magnet.
         result_d = defer.Deferred()
         d.addBoth(on_metadata, result_d)
         return result_d
@@ -653,7 +653,7 @@ class Core(component.Component):
                     )
                     status[key] = self.session_status[new_key]
                 else:
-                    log.warning('Session status key not valid: %s', key)
+                    log.debug('Session status key not valid: %s', key)
         return status
 
     @export
@@ -747,7 +747,7 @@ class Core(component.Component):
             import traceback
 
             traceback.print_exc()
-            # Torrent was probaly removed meanwhile
+            # Torrent was probably removed meanwhile
             return {}
 
         # Ask the plugin manager to fill in the plugin keys
@@ -911,6 +911,10 @@ class Core(component.Component):
     def set_torrent_trackers(self, torrent_id, trackers):
         """Sets a torrents tracker list. trackers will be ``[{"url", "tier"}]``"""
         return self.torrentmanager[torrent_id].set_trackers(trackers)
+
+    @export
+    def get_magnet_uri(self, torrent_id):
+        return self.torrentmanager[torrent_id].get_magnet_uri()
 
     @deprecated
     @export

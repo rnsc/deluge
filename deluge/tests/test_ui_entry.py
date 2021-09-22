@@ -19,6 +19,9 @@ from twisted.internet import defer
 
 import deluge
 import deluge.component as component
+import deluge.ui.console
+import deluge.ui.console.cmdline.commands.quit
+import deluge.ui.console.main
 import deluge.ui.web.server
 from deluge.common import PY2, get_localhost_auth, windows_check
 from deluge.ui import ui_entry
@@ -27,11 +30,6 @@ from deluge.ui.web.server import DelugeWeb
 from . import common
 from .basetest import BaseTestCase
 from .daemon_base import DaemonBase
-
-if not windows_check():
-    import deluge.ui.console
-    import deluge.ui.console.cmdline.commands.quit
-    import deluge.ui.console.main
 
 DEBUG_COMMAND = False
 
@@ -102,7 +100,7 @@ class UIWithDaemonBaseTestCase(UIBaseTestCase, DaemonBase):
 class DelugeEntryTestCase(BaseTestCase):
 
     if windows_check():
-        skip = 'cannot test console ui on windows'
+        skip = 'Console ui test on Windows broken due to sys args issue'
 
     def set_up(self):
         common.set_tmp_config_dir()
@@ -250,7 +248,7 @@ class WebUIBaseTestCase(UIBaseTestCase):
 class WebUIScriptEntryTestCase(BaseTestCase, WebUIBaseTestCase):
 
     if windows_check():
-        skip = 'cannot test console ui on windows'
+        skip = 'Console ui test on Windows broken due to sys args issue'
 
     def __init__(self, testname):
         super(WebUIScriptEntryTestCase, self).__init__(testname)
@@ -269,7 +267,7 @@ class WebUIScriptEntryTestCase(BaseTestCase, WebUIBaseTestCase):
 class WebUIDelugeScriptEntryTestCase(BaseTestCase, WebUIBaseTestCase):
 
     if windows_check():
-        skip = 'cannot test console ui on windows'
+        skip = 'Console ui test on Windows broken due to sys args issue'
 
     def __init__(self, testname):
         super(WebUIDelugeScriptEntryTestCase, self).__init__(testname)
@@ -331,13 +329,11 @@ class ConsoleUIBaseTestCase(UIBaseTestCase):
             )  # Check command name
             self.assertTrue('Common Options:' in std_output)
             self.assertTrue('Console Options:' in std_output)
-            self.assertTrue(
-                'Console Commands:\n  The following console commands are available:'
-                in std_output
+            self.assertIn(
+                'Console Commands:\n  The following console commands are available:',
+                std_output,
             )
-            self.assertTrue(
-                'The following console commands are available:' in std_output
-            )
+            self.assertIn('The following console commands are available:', std_output)
 
     def test_console_command_info(self):
         self.patch(sys, 'argv', self.var['sys_arg_cmd'] + ['info'])
@@ -355,8 +351,8 @@ class ConsoleUIBaseTestCase(UIBaseTestCase):
         with mock.patch('deluge.ui.console.main.ConsoleUI'):
             self.assertRaises(SystemExit, self.exec_command)
             std_output = fd.out.getvalue()
-            self.assertTrue('usage: info' in std_output)
-            self.assertTrue('Show information about the torrents' in std_output)
+            self.assertIn('usage: info', std_output)
+            self.assertIn('Show information about the torrents', std_output)
 
     def test_console_unrecognized_arguments(self):
         self.patch(
@@ -366,7 +362,7 @@ class ConsoleUIBaseTestCase(UIBaseTestCase):
         self.patch(argparse._sys, 'stderr', fd)
         with mock.patch('deluge.ui.console.main.ConsoleUI'):
             self.assertRaises(SystemExit, self.exec_command)
-            self.assertTrue('unrecognized arguments: --ui' in fd.out.getvalue())
+            self.assertIn('unrecognized arguments: --ui', fd.out.getvalue())
 
 
 class ConsoleUIWithDaemonBaseTestCase(UIWithDaemonBaseTestCase):
@@ -386,7 +382,7 @@ class ConsoleUIWithDaemonBaseTestCase(UIWithDaemonBaseTestCase):
             'argv',
             self.var['sys_arg_cmd']
             + ['--port']
-            + ['58900']
+            + [str(self.listen_port)]
             + ['--username']
             + [username]
             + ['--password']
@@ -404,9 +400,8 @@ class ConsoleUIWithDaemonBaseTestCase(UIWithDaemonBaseTestCase):
         yield self.exec_command()
 
         std_output = fd.out.getvalue()
-        self.assertTrue(
-            std_output
-            == 'Attempting to add torrent: ' + filename + '\nTorrent added!\n'
+        self.assertEqual(
+            std_output, 'Attempting to add torrent: ' + filename + '\nTorrent added!\n'
         )
 
     @defer.inlineCallbacks
@@ -441,10 +436,8 @@ class ConsoleUIWithDaemonBaseTestCase(UIWithDaemonBaseTestCase):
         yield self.exec_command()
 
         std_output = fd.out.getvalue()
-        self.assertTrue(
-            std_output.startswith('Total upload: ')
-            and std_output.endswith(' Moving: 0\n')
-        )
+        self.assertTrue(std_output.startswith('Total upload: '))
+        self.assertTrue(std_output.endswith(' Moving: 0\n'))
 
     @defer.inlineCallbacks
     def test_console_command_config_set_download_location(self):
@@ -460,7 +453,9 @@ class ConsoleUIWithDaemonBaseTestCase(UIWithDaemonBaseTestCase):
                     'u' if PY2 else ''
                 )
             )
-            and std_output.endswith('Configuration value successfully updated.\n')
+        )
+        self.assertTrue(
+            std_output.endswith('Configuration value successfully updated.\n')
         )
 
 
@@ -469,7 +464,7 @@ class ConsoleScriptEntryWithDaemonTestCase(
 ):
 
     if windows_check():
-        skip = 'cannot test console ui on windows'
+        skip = 'Console ui test on Windows broken due to sys args issue'
 
     def __init__(self, testname):
         super(ConsoleScriptEntryWithDaemonTestCase, self).__init__(testname)
@@ -495,7 +490,7 @@ class ConsoleScriptEntryWithDaemonTestCase(
 class ConsoleScriptEntryTestCase(BaseTestCase, ConsoleUIBaseTestCase):
 
     if windows_check():
-        skip = 'cannot test console ui on windows'
+        skip = 'Console ui test on Windows broken due to sys args issue'
 
     def __init__(self, testname):
         super(ConsoleScriptEntryTestCase, self).__init__(testname)

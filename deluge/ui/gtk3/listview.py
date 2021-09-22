@@ -68,10 +68,10 @@ class ListView(object):
 
     class TreeviewColumn(Gtk.TreeViewColumn, object):
         """
-            TreeViewColumn does not signal right-click events, and we need them
-            This subclass is equivalent to TreeViewColumn, but it signals these events
+        TreeViewColumn does not signal right-click events, and we need them
+        This subclass is equivalent to TreeViewColumn, but it signals these events
 
-            Most of the code of this class comes from Quod Libet (http://www.sacredchao.net/quodlibet)
+        Most of the code of this class comes from Quod Libet (http://www.sacredchao.net/quodlibet)
         """
 
         __gsignals__ = {
@@ -112,7 +112,7 @@ class ListView(object):
             Gtk.TreeViewColumn.set_visible(self, visible)
             if self.data_func:
                 if not visible:
-                    # Set data function to None to prevent unecessary calls when column is hidden
+                    # Set data function to None to prevent unnecessary calls when column is hidden
                     self.set_cell_data_func(self.cell_renderer, None, func_data=None)
                 else:
                     self.set_cell_data_func(
@@ -144,7 +144,6 @@ class ListView(object):
         self.liststore = None
         self.model_filter = None
 
-        self.treeview.set_rules_hint(True)
         self.treeview.set_reorderable(False)
         self.treeview.set_rubber_banding(True)  # Enable mouse multi-row selection.
         self.treeview.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
@@ -281,7 +280,7 @@ class ListView(object):
 
     def save_state(self, filename):
         """Saves the listview state (column positions and visibility) to
-            filename."""
+        filename."""
         # A list of ListViewColumnStates
         state = []
 
@@ -627,8 +626,7 @@ class ListView(object):
         unique=False,
         default_sort=False,
     ):
-        """Add a text column to the listview.  Only the header name is required.
-        """
+        """Add a text column to the listview.  Only the header name is required."""
         render = Gtk.CellRendererText()
         self.add_column(
             header,

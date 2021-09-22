@@ -108,6 +108,7 @@ class MainWindow(component.Component):
         self.window = self.main_builder.get_object('main_window')
         self.window.set_icon(get_deluge_icon())
         self.tabsbar_pane = self.main_builder.get_object('tabsbar_pane')
+        self.tabsbar_torrent_info = self.main_builder.get_object('torrent_info')
         self.sidebar_pane = self.main_builder.get_object('sidebar_pane')
 
         # Keep a list of components to pause and resume when changing window state.

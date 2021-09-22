@@ -9,7 +9,7 @@
  */
 
 deluge.menus = {
-    onTorrentActionSetOpt: function(item, e) {
+    onTorrentActionSetOpt: function (item, e) {
         var ids = deluge.torrents.getSelectedIds();
         var action = item.initialConfig.torrentAction;
         var opts = {};
@@ -17,20 +17,23 @@ deluge.menus = {
         deluge.client.core.set_torrent_options(ids, opts);
     },
 
-    onTorrentActionMethod: function(item, e) {
+    onTorrentActionMethod: function (item, e) {
         var ids = deluge.torrents.getSelectedIds();
         var action = item.initialConfig.torrentAction;
         deluge.client.core[action](ids, {
-            success: function() {
+            success: function () {
                 deluge.ui.update();
             },
         });
     },
 
-    onTorrentActionShow: function(item, e) {
+    onTorrentActionShow: function (item, e) {
         var ids = deluge.torrents.getSelectedIds();
         var action = item.initialConfig.torrentAction;
         switch (action) {
+            case 'copy_magnet':
+                deluge.copyMagnetWindow.show();
+                break;
             case 'edit_trackers':
                 deluge.editTrackers.show();
                 break;
@@ -311,6 +314,13 @@ deluge.menus.torrent = new Ext.menu.Menu({
             }),
         },
         '-',
+        {
+            torrentAction: 'copy_magnet',
+            text: _('Copy Magnet URI'),
+            iconCls: 'icon-magnet-copy',
+            handler: deluge.menus.onTorrentActionShow,
+            scope: deluge.menus,
+        },
         {
             torrentAction: 'force_reannounce',
             text: _('Update Tracker'),

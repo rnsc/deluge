@@ -24,8 +24,15 @@ from twisted.internet.defer import Deferred, DeferredList
 from twisted.internet.task import LoopingCall
 
 import deluge.component as component
-from deluge._libtorrent import lt
-from deluge.common import PY2, archive_files, decode_bytes, get_magnet_info, is_magnet
+from deluge._libtorrent import LT_VERSION, lt
+from deluge.common import (
+    PY2,
+    VersionSplit,
+    archive_files,
+    decode_bytes,
+    get_magnet_info,
+    is_magnet,
+)
 from deluge.configmanager import ConfigManager, get_config_dir
 from deluge.core.authmanager import AUTH_LEVEL_ADMIN
 from deluge.core.torrent import Torrent, TorrentOptions, sanitize_filepath
@@ -89,7 +96,7 @@ class TorrentState:  # pylint: disable=old-style-class
         super_seeding=False,
         name=None,
     ):
-        # Build the class atrribute list from args
+        # Build the class attribute list from args
         for key, value in locals().items():
             if key == 'self':
                 continue
@@ -434,6 +441,11 @@ class TorrentManager(component.Component):
                 add_torrent_params['url'] = magnet.strip().encode('utf8')
                 add_torrent_params['name'] = magnet_info['name']
                 torrent_id = magnet_info['info_hash']
+                # Workaround lt 1.2 bug for magnet resume data with no metadata
+                if resume_data and VersionSplit(LT_VERSION) >= VersionSplit('1.2.10.0'):
+                    add_torrent_params['info_hash'] = bytes(
+                        bytearray.fromhex(torrent_id)
+                    )
             else:
                 raise AddTorrentError(
                     'Unable to add magnet, invalid magnet info: %s' % magnet
@@ -642,7 +654,7 @@ class TorrentManager(component.Component):
         # Resume AlertManager if paused for adding torrent to libtorrent.
         component.resume('AlertManager')
 
-        # Store the orignal resume_data, in case of errors.
+        # Store the original resume_data, in case of errors.
         if resume_data:
             self.resume_data[torrent.torrent_id] = resume_data
 
@@ -1025,7 +1037,7 @@ class TorrentManager(component.Component):
             )
 
         def on_torrent_resume_save(dummy_result, torrent_id):
-            """Recieved torrent resume_data alert so remove from waiting list"""
+            """Received torrent resume_data alert so remove from waiting list"""
             self.waiting_on_resume_data.pop(torrent_id, None)
 
         deferreds = []
@@ -1243,7 +1255,7 @@ class TorrentManager(component.Component):
     def on_alert_add_torrent(self, alert):
         """Alert handler for libtorrent add_torrent_alert"""
         if not alert.handle.is_valid():
-            log.warning('Torrent handle is invalid!')
+            log.warning('Torrent handle is invalid: %s', alert.error.message())
             return
 
         try:
@@ -1392,7 +1404,22 @@ class TorrentManager(component.Component):
         log.debug(
             'Tracker Error Alert: %s [%s]', decode_bytes(alert.message()), error_message
         )
-        torrent.set_tracker_status('Error: ' + error_message)
+        if VersionSplit(LT_VERSION) >= VersionSplit('1.2.0.0'):
+            # libtorrent 1.2 added endpoint struct to each tracker. to prevent false updates
+            # we will need to verify that at least one endpoint to the errored tracker is working
+            for tracker in torrent.handle.trackers():
+                if tracker['url'] == alert.url:
+                    if any(
+                        endpoint['last_error']['value'] == 0
+                        for endpoint in tracker['endpoints']
+                    ):
+                        torrent.set_tracker_status('Announce OK')
+                    else:
+                        torrent.set_tracker_status('Error: ' + error_message)
+                    break
+        else:
+            # preserve old functionality for libtorrent < 1.2
+            torrent.set_tracker_status('Error: ' + error_message)
 
     def on_alert_storage_moved(self, alert):
         """Alert handler for libtorrent storage_moved_alert"""
